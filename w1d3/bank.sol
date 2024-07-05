@@ -12,18 +12,21 @@ pragma solidity ^0.8.8;
 4. Store the amounts of funds deposited by the top three addresses in an array.
 */
 
+
+// Updated at 2024-07-05
+/*
+1. Delete the MAX_AMOUNT、MID_AMOUNT、MIN_AMOUNT 
+2. Use mapping query the top three address‘s deposit amount
+3. add _ to the function variable
+*/
+
+
 contract SmallBank {
 
-    mapping(address=>uint) AddressToAmount;
+    mapping(address=>uint) public AddressToAmount;
     address  payable public BANK_OWER;
 
     address[] public TopThreeAddress = new address[](3);
-
-    uint public MAX_AMOUNT;
-    uint public MID_AMOUNT;
-    uint public MIN_AMOUNT;
-    
-
 
     constructor (){
 
@@ -47,45 +50,44 @@ contract SmallBank {
 
     }
 
-    function calTopUser(uint amount ,address user_address ) private { 
+    function calTopUser(uint _amount ,address _user_address ) private { 
 
-        if (amount<MIN_AMOUNT){
+        if (_amount<AddressToAmount[TopThreeAddress[2]]){
             return;
 
         }
 
-        if (MIN_AMOUNT<amount&& amount<=MID_AMOUNT ){
+        if (AddressToAmount[TopThreeAddress[2]]<_amount && _amount<=AddressToAmount[TopThreeAddress[1]] ){
 
-            MIN_AMOUNT=amount;
-            TopThreeAddress[2]=user_address;
+            TopThreeAddress[2]=_user_address;
             return;
 
         }
 
-        if (MID_AMOUNT<amount&& amount<=MAX_AMOUNT){
+        if (AddressToAmount[TopThreeAddress[1]]<_amount && _amount<=AddressToAmount[TopThreeAddress[0]]){
 
 
-            if(TopThreeAddress[1]!=user_address){
-            MIN_AMOUNT =MID_AMOUNT;
+            if(TopThreeAddress[1]!=_user_address){
+
+       
             TopThreeAddress[2]=TopThreeAddress[1];
-            MID_AMOUNT=amount;}
-            else {MID_AMOUNT=amount;}
-
-            TopThreeAddress[1]=user_address;
-            return;
-        }
-        if (amount>MAX_AMOUNT){
-
-             if(TopThreeAddress[0]!=user_address){
+            }
             
-            MIN_AMOUNT =MID_AMOUNT;
+
+            TopThreeAddress[1]=_user_address;
+            return;
+        }
+        if (_amount>AddressToAmount[TopThreeAddress[0]]){
+
+             if(TopThreeAddress[0]!=_user_address){
+            
+            
             TopThreeAddress[2]=TopThreeAddress[1];
-            MID_AMOUNT=MAX_AMOUNT;
+            
             TopThreeAddress[1]=TopThreeAddress[0];
-            MAX_AMOUNT=amount;}
-            else {
-            MAX_AMOUNT=amount;}
-            TopThreeAddress[0]=user_address;
+            }
+     
+            TopThreeAddress[0]=_user_address;
             return;
 
         }

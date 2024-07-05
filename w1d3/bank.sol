@@ -84,13 +84,10 @@ contract SmallBank {
         }
         
        
-    
     }
     receive() external payable{
         
-        AddressToAmount[msg.sender]+=msg.value;
-
-        calTopUser(AddressToAmount[msg.sender],msg.sender);
+        deposited();
 
     }
 

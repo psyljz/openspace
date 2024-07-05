@@ -12,15 +12,6 @@ pragma solidity ^0.8.8;
 4. Store the amounts of funds deposited by the top three addresses in an array.
 */
 
-
-// Updated at 2024-07-05
-/*
-1. Delete the MAX_AMOUNT、MID_AMOUNT、MIN_AMOUNT 
-2. Use mapping query the top three address‘s deposit amount
-3. add _ to the function variable
-*/
-
-
 contract SmallBank {
 
     mapping(address=>uint) public AddressToAmount;
@@ -96,6 +87,10 @@ contract SmallBank {
     
     }
     receive() external payable{
+        
+        AddressToAmount[msg.sender]+=msg.value;
+
+        calTopUser(AddressToAmount[msg.sender],msg.sender);
 
     }
 

@@ -31,8 +31,11 @@ contract TokenBank {
 
     function withdraw(address _token_address, uint _amount) public {
         require(AddressToAmount[msg.sender][_token_address] >= _amount, "InsufficientBalance");
-        IERC20(_token_address).transfer(msg.sender, _amount);
+
         AddressToAmount[msg.sender][_token_address] -= _amount;
+        bool result=IERC20(_token_address).transfer(msg.sender, _amount);
+        require(result);
+       
         emit Withdraw(msg.sender, _amount);
     }
 

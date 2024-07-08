@@ -21,6 +21,7 @@ contract TokenBank {
     event Withdraw(address indexed _to, uint _amount);
     mapping(address => mapping(address => uint))public AddressToAmount;
 
+
     function desposit(address _token_address, uint _amount) public {
         bool result =IERC20(_token_address).transferFrom(msg.sender, address(this), _amount);
         require(result);
@@ -39,6 +40,7 @@ contract TokenBank {
         return AddressToAmount[msg.sender][_token_address];
     }
     function getAllowance(address _token_address) public view returns(uint) {
+        return IERC20(_token_address).allowance(msg.sender, address(this));
         
     }
 

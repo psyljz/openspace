@@ -24,11 +24,7 @@ contract nftmarket {
         uint256 tokenId,
         uint sale_price
     ) public {
-        IERC721(token_address).safeTransferFrom(
-            msg.sender,
-            address(this),
-            tokenId
-        );
+        require(IERC721(token_address).getApproved(tokenId)==address(this), "Not approved");
         nftList[token_address][tokenId] = sale_price;
     }
 
@@ -52,7 +48,7 @@ contract nftmarket {
             nftList[token_address][tokenId]
         );
         IERC721(token_address).safeTransferFrom(
-            address(this),
+            IERC721(token_address).ownerOf(tokenId),
             msg.sender,
             tokenId
         );

@@ -17,14 +17,22 @@ import "./IERC721.sol";
 import "./IERC20.sol";
 
 contract nftmarket {
+    address public IEC20_TOKEN_ADDRESS;
     mapping(address => mapping(uint256 => uint256)) public nftList;
+
+    constructor(address _IEC20_TOKEN) {
+        IEC20_TOKEN_ADDRESS = _IEC20_TOKEN;
+    }
 
     function listItem(
         address token_address,
         uint256 tokenId,
         uint sale_price
     ) public {
-        require(IERC721(token_address).getApproved(tokenId)==address(this), "Not approved");
+        require(
+            IERC721(token_address).getApproved(tokenId) == address(this),
+            "Not approved"
+        );
         nftList[token_address][tokenId] = sale_price;
     }
 
@@ -52,12 +60,19 @@ contract nftmarket {
             msg.sender,
             tokenId
         );
-
     }
 
-     function tokensReceived(address from,  uint amount, bytes memory data) public returns(bool){
+    function tokensReceived(
+        address from,
+        uint amount,
+        bytes memory data
+    ) public returns (bool) {
+        require(msg.sender == IEC20_TOKEN_ADDRESS, "Only accept");
 
-        (uint256 tokenId, address token_address) = abi.decode(data,(uint256,address));
+        (uint256 tokenId, address token_address) = abi.decode(
+            data,
+            (uint256, address)
+        );
 
         require(
             nftList[token_address][tokenId] > 0,
@@ -75,8 +90,5 @@ contract nftmarket {
         );
 
         return true;
-
-
     }
 }
-

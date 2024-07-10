@@ -1,4 +1,3 @@
-
 /*编写一个 TokenBank 合约，可以将自己的 Token 存入到 TokenBank， 和从 TokenBank 取出。
 
 TokenBank 有两个方法：
@@ -12,49 +11,61 @@ pragma solidity ^0.8.0;
 //@Author liujingze
 //@dev withdraw and deposit ERC20 token
 
-
 import "./IERC20.sol";
 import "./IReceiver.sol";
 
-contract TokenBank is IERCRecipient{
+contract TokenBank is IERCRecipient {
+    address public IEC20_TOKEN_ADDRESS;
 
     event Deposit(address indexed _from, uint _amount);
     event Withdraw(address indexed _to, uint _amount);
-    mapping(address => mapping(address => uint))public AddressToAmount;
+    mapping(address => mapping(address => uint)) public AddressToAmount;
 
+    constructor(address _IEC20_TOKEN) {
+        IEC20_TOKEN_ADDRESS = _IEC20_TOKEN;
+    }
 
     function deposit(address _token_address, uint _amount) public {
-        
-        bool result =IERC20(_token_address).transferFrom(msg.sender, address(this), _amount);
+        bool result = IERC20(_token_address).transferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
         require(result);
         AddressToAmount[msg.sender][_token_address] += _amount;
         emit Deposit(msg.sender, _amount);
     }
 
     function withdraw(address _token_address, uint _amount) public {
-        require(AddressToAmount[msg.sender][_token_address] >= _amount, "InsufficientBalance");
+        require(
+            AddressToAmount[msg.sender][_token_address] >= _amount,
+            "InsufficientBalance"
+        );
 
         AddressToAmount[msg.sender][_token_address] -= _amount;
-        bool result=IERC20(_token_address).transfer(msg.sender, _amount);
+        bool result = IERC20(_token_address).transfer(msg.sender, _amount);
         require(result);
-       
+
         emit Withdraw(msg.sender, _amount);
     }
 
-    function getOneBalance(address _token_address) public view returns(uint) {
+    function getOneBalance(address _token_address) public view returns (uint) {
         return AddressToAmount[msg.sender][_token_address];
     }
-    function getAllowance(address _token_address) public view returns(uint) {
+
+    function getAllowance(address _token_address) public view returns (uint) {
         return IERC20(_token_address).allowance(msg.sender, address(this));
-        
     }
-    function tokensReceived(address from ,uint amount,bytes memory)public returns(bool){
-        
+
+    function tokensReceived(
+        address from,
+        uint amount,
+        bytes memory
+    ) public returns (bool) {
+        require(msg.sender == IEC20_TOKEN_ADDRESS, "Only accept");
+
         AddressToAmount[from][msg.sender] += amount;
         emit Deposit(from, amount);
         return true;
-
     }
-
-    
 }

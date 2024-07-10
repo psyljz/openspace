@@ -24,8 +24,8 @@ interface IERCRecipient {
      */
     function tokensReceived(
         address from,
-        address token_address,
-        uint amount
+        uint amount,
+        bytes memory data
 
     ) external returns(bool);
 }

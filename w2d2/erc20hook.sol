@@ -33,7 +33,6 @@ contract HPToken is ERC20 {
         if (isContract(to)) {
             result = IERCRecipient(to).tokensReceived(
                 msg.sender,
-                address(this),
                 amount,
                 data
             );

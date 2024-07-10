@@ -55,13 +55,15 @@ contract nftmarket {
 
     }
 
-    function tokensReceived(addrss from,  uint amount, bytes memory data) public returns(bool){
+     function tokensReceived(address from,  uint amount, bytes memory data) public returns(bool){
 
-        uint tokenID=uint(data);
-        buynft(from, amount, data);
+        (uint256 tokenId, address token_address) = abi.decode(data,(uint256,address));
+
+        buynft(token_address,tokenId,from,amount);
 
         return true;
 
 
     }
 }
+

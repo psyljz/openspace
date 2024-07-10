@@ -59,7 +59,20 @@ contract nftmarket {
 
         (uint256 tokenId, address token_address) = abi.decode(data,(uint256,address));
 
-        buynft(token_address,tokenId,from,amount);
+        require(
+            nftList[token_address][tokenId] > 0,
+            "The NFT is not listed on the market"
+        );
+        require(
+            amount == nftList[token_address][tokenId],
+            "Insufficient funds"
+        );
+
+        IERC721(token_address).safeTransferFrom(
+            IERC721(token_address).ownerOf(tokenId),
+            from,
+            tokenId
+        );
 
         return true;
 

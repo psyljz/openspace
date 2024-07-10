@@ -23,9 +23,10 @@ contract HPToken is ERC20 {
         return size > 0;
     }
 
-    function transferWithCallback(
+    function transferWithCall(
         address to,
-        uint amount
+        uint amount,
+        bytes memory data
     ) public returns (bool result) {
         transfer(to, amount);
 
@@ -33,7 +34,8 @@ contract HPToken is ERC20 {
             result = IERCRecipient(to).tokensReceived(
                 msg.sender,
                 address(this),
-                amount
+                amount,
+                data
             );
             require(
                 result,

@@ -54,4 +54,14 @@ contract nftmarket {
         );
 
     }
+
+    function tokensReceived(addrss from,  uint amount, bytes memory data) public returns(bool){
+
+        uint tokenID=uint(data);
+        buynft(from, amount, data);
+
+        return true;
+
+
+    }
 }

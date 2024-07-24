@@ -1,0 +1,65 @@
+// 合约地址: 0x95d5950e4Be30BCe7664D852915e537af82b5798
+
+// 智能合约 JustArray 的 Solidity 代码:
+// contract JustArray {
+//     // 定义一个结构体 LockInfo，包含用户地址、开始时间和锁定金额
+//     struct LockInfo{
+//         address user;
+//         uint64 startTime;
+//         uint256 amount;
+//     }
+//     
+//     // 声明一个私有的 LockInfo 数组
+//     LockInfo[] private _locks;
+//
+//     // 构造函数
+//     constructor() {
+//         // 在构造函数中初始化数组，添加 11 个元素
+//         for (uint256 i = 0; i < 11; i++) {
+//             _locks.push(LockInfo(address(uint160(i+1)), uint64(block.timestamp*2-i), 1e18*(i+1)));
+//         }
+//     }
+// }
+
+// 导入必要的 viem 库函数
+import { createPublicClient, http, toHex, encodePacked, keccak256 } from "viem";
+import { mainnet } from "viem/chains";
+
+// 创建一个公共客户端，连接到 Sepolia 测试网
+export const publicClient = createPublicClient({
+  chain: mainnet,
+  transport: http("https://1rpc.io/sepolia"),
+});
+
+// 定义一个异步函数来获取指定存储槽的数据
+async function getStorageAt(index) {
+  const data = await publicClient.getStorageAt({
+    address: "0x95d5950e4Be30BCe7664D852915e537af82b5798",
+    slot: index,
+  });
+  
+  return data;
+}
+
+// 计算数组第一个元素的存储槽
+// 在 Solidity 中，动态数组的存储位置是其长度所在的槽的 keccak256 哈希值
+const slot_index = keccak256(encodePacked(["uint256"], [0]));
+
+// 数组在存储中的布局:
+// 1. 数组的长度存储在 keccak256(0) - 1 的位置
+// 2. 第一个元素从 keccak256(0) 开始存储
+// 3. 每个 LockInfo 结构体占用 2 个存储槽
+//    - 第一个槽: address (20 bytes) + uint64 (8 bytes) = 28 bytes < 32 bytes，所以它们被打包在一起
+//    - 第二个槽: uint256 amount (32 bytes)
+// 4. 因此，我们需要读取 2 * 11 = 22 个存储槽来获取所有数据
+
+// 遍历并读取所有 22 个存储槽
+for(let i = 0; i < 22; i++){
+    const res = await getStorageAt(toHex(BigInt(slot_index) + BigInt(i)))
+    console.log(res);
+}
+
+// 输出说明:
+// - 偶数索引的槽 (0, 2, 4, ...) 包含 address 和 startTime
+// - 奇数索引的槽 (1, 3, 5, ...) 包含 amount
+// 解析输出需要将十六进制数据转换为相应的类型（地址、uint64 和 uint256） 

@@ -7,21 +7,23 @@ export const publicClient = createPublicClient({
   transport: http("https://eth-mainnet.g.alchemy.com/v2/seOLlSZG2Gi5ZuxZHs9xNlpafdax4u-J")
 })
 
-
 const block_internal=BigInt(100)
 const block_end = BigInt(await publicClient.getBlockNumber())
 const block_start = BigInt(block_end - block_internal)
 
-const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+
+//0xdAC17F958D2ee523a2206206994597C13D831ec7
+// const USDC_ADDRESS = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+const USDT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+
 const logs = await publicClient.getLogs({
-    address: USDC_ADDRESS,
+    address: USDT_ADDRESS,
     event: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)'),
     fromBlock: block_start, 
     toBlock: block_end
   })
 
   
-
 function formatTransferData(transferEvents) {
     return transferEvents.map(event => {
       // Convert BigInt to Number and divide by 10^6 for USDC decimal places

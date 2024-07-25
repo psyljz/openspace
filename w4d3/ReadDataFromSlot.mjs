@@ -46,7 +46,7 @@ async function getStorageAt(index) {
 const slot_index = keccak256(encodePacked(["uint256"], [0]));
 
 // 数组在存储中的布局:
-// 1. 数组的长度存储在 keccak256(0) - 1 的位置
+// 1. 数组的长度存储在 slot(0) 的槽中
 // 2. 第一个元素从 keccak256(0) 开始存储
 // 3. 每个 LockInfo 结构体占用 2 个存储槽
 //    - 第一个槽: address (20 bytes) + uint64 (8 bytes) = 28 bytes < 32 bytes，所以它们被打包在一起

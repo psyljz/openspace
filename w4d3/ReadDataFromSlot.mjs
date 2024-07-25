@@ -1,37 +1,11 @@
-// 合约地址: 0x95d5950e4Be30BCe7664D852915e537af82b5798
-
-// 智能合约 JustArray 的 Solidity 代码:
-// contract JustArray {
-//     // 定义一个结构体 LockInfo，包含用户地址、开始时间和锁定金额
-//     struct LockInfo{
-//         address user;
-//         uint64 startTime;
-//         uint256 amount;
-//     }
-//     
-//     // 声明一个私有的 LockInfo 数组
-//     LockInfo[] private _locks;
-//
-//     // 构造函数
-//     constructor() {
-//         // 在构造函数中初始化数组，添加 11 个元素
-//         for (uint256 i = 0; i < 11; i++) {
-//             _locks.push(LockInfo(address(uint160(i+1)), uint64(block.timestamp*2-i), 1e18*(i+1)));
-//         }
-//     }
-// }
-
-// 导入必要的 viem 库函数
 import { createPublicClient, http, toHex, encodePacked, keccak256 } from "viem";
 import { mainnet } from "viem/chains";
 
-// 创建一个公共客户端，连接到 Sepolia 测试网
 export const publicClient = createPublicClient({
   chain: mainnet,
   transport: http("https://1rpc.io/sepolia"),
 });
 
-// 定义一个异步函数来获取指定存储槽的数据
 async function getStorageAt(index) {
   const data = await publicClient.getStorageAt({
     address: "0x95d5950e4Be30BCe7664D852915e537af82b5798",
@@ -41,48 +15,96 @@ async function getStorageAt(index) {
   return data;
 }
 
-// 计算数组第一个元素的存储槽
-// 在 Solidity 中，动态数组的存储位置是其长度所在的槽的 keccak256 哈希值
 const slot_index = keccak256(encodePacked(["uint256"], [0]));
 
-// 数组在存储中的布局:
-// 1. 数组的长度存储在 slot(0) 的槽中
-// 2. 第一个元素从 keccak256(0) 开始存储
-// 3. 每个 LockInfo 结构体占用 2 个存储槽
-//    - 第一个槽: address (20 bytes) + uint64 (8 bytes) = 28 bytes < 32 bytes，所以它们被打包在一起
-//    - 第二个槽: uint256 amount (32 bytes)
-// 4. 因此，我们需要读取 2 * 11 = 22 个存储槽来获取所有数据
+async function parseAndDisplayLocks() {
+  // 读取数组的长度
+  const length = await getStorageAt(toHex(0));
+  const Index_length = Number(length) * 2;
 
-// 遍历并读取所有 22 个存储槽
-for(let i = 0; i < 22; i++){
-    const res = await getStorageAt(toHex(BigInt(slot_index) + BigInt(i)))
-    console.log(res);
+  const locks = [];
+
+  for(let i = 0; i < Index_length; i += 2) {
+    const slot1 = await getStorageAt(toHex(BigInt(slot_index) + BigInt(i)));
+    const slot2 = await getStorageAt(toHex(BigInt(slot_index) + BigInt(i + 1)));
+
+    const user = '0x' + slot1.slice(26, 66);
+    const startTime = parseInt(slot1.slice(10, 26), 16);
+    const amount = BigInt(slot2);
+
+    locks.push({
+      user,
+      startTime,
+      amount: amount.toString()  // 转换为字符串以避免BigInt显示问题
+    });
+  }
+
+  // 显示解析后的数据
+  locks.forEach((lock, index) => {
+    console.log(`locks[${index}]:`);
+    console.log(`user: ${lock.user}`);
+    console.log(`startTime: ${lock.startTime}`);
+    console.log(`amount: ${lock.amount} (${BigInt(lock.amount) / BigInt(1e18)} ETH)`);
+    console.log('---');
+  });
 }
 
-// 输出说明:
-// - 偶数索引的槽 (0, 2, 4, ...) 包含 address 和 startTime
-// - 奇数索引的槽 (1, 3, 5, ...) 包含 amount
-// 解析输出需要将十六进制数据转换为相应的类型（地址、uint64 和 uint256）
+// 调用函数来解析和显示数据
+parseAndDisplayLocks().catch(console.error);
 
-// 0x0000000000000000cd418d480000000000000000000000000000000000000001
-// 0x0000000000000000000000000000000000000000000000000de0b6b3a7640000
-// 0x0000000000000000cd418d470000000000000000000000000000000000000002
-// 0x0000000000000000000000000000000000000000000000001bc16d674ec80000
-// 0x0000000000000000cd418d460000000000000000000000000000000000000003
-// 0x00000000000000000000000000000000000000000000000029a2241af62c0000
-// 0x0000000000000000cd418d450000000000000000000000000000000000000004
-// 0x0000000000000000000000000000000000000000000000003782dace9d900000
-// 0x0000000000000000cd418d440000000000000000000000000000000000000005
-// 0x0000000000000000000000000000000000000000000000004563918244f40000
-// 0x0000000000000000cd418d430000000000000000000000000000000000000006
-// 0x00000000000000000000000000000000000000000000000053444835ec580000
-// 0x0000000000000000cd418d420000000000000000000000000000000000000007
-// 0x0000000000000000000000000000000000000000000000006124fee993bc0000
-// 0x0000000000000000cd418d410000000000000000000000000000000000000008
-// 0x0000000000000000000000000000000000000000000000006f05b59d3b200000
-// 0x0000000000000000cd418d400000000000000000000000000000000000000009
-// 0x0000000000000000000000000000000000000000000000007ce66c50e2840000
-// 0x0000000000000000cd418d3f000000000000000000000000000000000000000a
-// 0x0000000000000000000000000000000000000000000000008ac7230489e80000
-// 0x0000000000000000cd418d3e000000000000000000000000000000000000000b
-// 0x00000000000000000000000000000000000000000000000098a7d9b8314c0000
+
+// locks[0]:
+// user: 0x0000000000000000000000000000000000000001
+// startTime: 3443625288
+// amount: 1000000000000000000 (1 ETH)
+// ---
+// locks[1]:
+// user: 0x0000000000000000000000000000000000000002
+// startTime: 3443625287
+// amount: 2000000000000000000 (2 ETH)
+// ---
+// locks[2]:
+// user: 0x0000000000000000000000000000000000000003
+// startTime: 3443625286
+// amount: 3000000000000000000 (3 ETH)
+// ---
+// locks[3]:
+// user: 0x0000000000000000000000000000000000000004
+// startTime: 3443625285
+// amount: 4000000000000000000 (4 ETH)
+// ---
+// locks[4]:
+// user: 0x0000000000000000000000000000000000000005
+// startTime: 3443625284
+// amount: 5000000000000000000 (5 ETH)
+// ---
+// locks[5]:
+// user: 0x0000000000000000000000000000000000000006
+// startTime: 3443625283
+// amount: 6000000000000000000 (6 ETH)
+// ---
+// locks[6]:
+// user: 0x0000000000000000000000000000000000000007
+// startTime: 3443625282
+// amount: 7000000000000000000 (7 ETH)
+// ---
+// locks[7]:
+// user: 0x0000000000000000000000000000000000000008
+// startTime: 3443625281
+// amount: 8000000000000000000 (8 ETH)
+// ---
+// locks[8]:
+// user: 0x0000000000000000000000000000000000000009
+// startTime: 3443625280
+// amount: 9000000000000000000 (9 ETH)
+// ---
+// locks[9]:
+// user: 0x000000000000000000000000000000000000000a
+// startTime: 3443625279
+// amount: 10000000000000000000 (10 ETH)
+// ---
+// locks[10]:
+// user: 0x000000000000000000000000000000000000000b
+// startTime: 3443625278
+// amount: 11000000000000000000 (11 ETH)
+// ---
